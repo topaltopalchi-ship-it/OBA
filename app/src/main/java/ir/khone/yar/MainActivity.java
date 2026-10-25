@@ -2,6 +2,7 @@ package ir.khone.yar;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.Dialog;
 import androidx.activity.ComponentActivity;
 import ir.cafebazaar.poolakey.Connection;
 import ir.cafebazaar.poolakey.Payment;
