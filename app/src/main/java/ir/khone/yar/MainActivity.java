@@ -155,17 +155,78 @@ public class MainActivity extends ComponentActivity {
 
 
     private void showEntryChoiceDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("ورود به OBA")
-                .setMessage("برای شروع، یکی از روش‌ها را انتخاب کن. می‌توانی رایگان ادامه بدهی یا با حساب کاربری وارد شوی/حساب جدید بسازی. اطلاعات خانه و پشتیبان‌ها فقط روی همین گوشی می‌مانند.")
-                .setCancelable(false)
-                .setPositiveButton("ادامهٔ رایگان", (dialog, which) -> {
-                    getSharedPreferences("khoneyar", MODE_PRIVATE).edit()
-                            .putString("entry_mode", "free").apply();
-                })
-                .setNegativeButton("ورود به حساب", (dialog, which) -> showCloudAuthDialog(false))
-                .setNeutralButton("ساخت حساب", (dialog, which) -> showCloudAuthDialog(true))
-                .show();
+        final Dialog entryDialog = new Dialog(this);
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setGravity(Gravity.CENTER_HORIZONTAL);
+        panel.setPadding(dp(22), dp(24), dp(22), dp(22));
+        panel.setBackground(round(Color.WHITE, 26));
+
+        TextView brand = text("🏠 OBA", 29, Color.rgb(28, 48, 105), true);
+        brand.setGravity(Gravity.CENTER);
+        panel.addView(brand, lp(-1, -2, 0, 0, 0, 6));
+
+        TextView heading = text("خوش آمدی!", 22, Color.rgb(28, 48, 105), true);
+        heading.setGravity(Gravity.CENTER);
+        panel.addView(heading, lp(-1, -2, 0, 0, 0, 6));
+
+        TextView subtitle = text("روش ورودت را انتخاب کن", 15, Color.rgb(95, 105, 125), false);
+        subtitle.setGravity(Gravity.CENTER);
+        panel.addView(subtitle, lp(-1, -2, 0, 0, 0, 18));
+
+        Button free = entryChoiceButton("✦   ادامهٔ رایگان", "بدون ساخت حساب شروع کن", Color.rgb(0, 145, 105), Color.WHITE);
+        free.setOnClickListener(v -> {
+            getSharedPreferences("khoneyar", MODE_PRIVATE).edit().putString("entry_mode", "free").apply();
+            entryDialog.dismiss();
+        });
+        panel.addView(free, lp(-1, dp(68), 0, 0, 0, 12));
+
+        Button login = entryChoiceButton("↪   ورود به حساب", "برای حسابی که قبلاً ساخته‌ای", Color.rgb(40, 75, 160), Color.WHITE);
+        login.setOnClickListener(v -> {
+            entryDialog.dismiss();
+            showCloudAuthDialog(false);
+        });
+        panel.addView(login, lp(-1, dp(68), 0, 0, 0, 12));
+
+        Button register = entryChoiceButton("＋   ساخت حساب جدید", "ثبت‌نام با ایمیل و گذرواژه", Color.rgb(247, 248, 252), Color.rgb(35, 50, 88));
+        register.setOnClickListener(v -> {
+            entryDialog.dismiss();
+            showCloudAuthDialog(true);
+        });
+        panel.addView(register, lp(-1, dp(68), 0, 0, 0, 18));
+
+        TextView privacy = text("🔒 اطلاعات خانه و فایل‌های پشتیبان روی همین گوشی می‌مانند.", 12, Color.rgb(105, 112, 128), false);
+        privacy.setGravity(Gravity.CENTER);
+        panel.addView(privacy, lp(-1, -2, 0, 2, 0, 0));
+
+        entryDialog.setContentView(panel);
+        if (entryDialog.getWindow() != null) {
+            entryDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        entryDialog.setCancelable(false);
+        entryDialog.show();
+        if (entryDialog.getWindow() != null) {
+            entryDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            entryDialog.getWindow().setLayout((int)(getResources().getDisplayMetrics().widthPixels * 0.90), -2);
+        }
+    }
+
+    private Button entryChoiceButton(String title, String subtitle, int backgroundColor, int textColor) {
+        Button button = new Button(this);
+        android.text.SpannableString label = new android.text.SpannableString(title + "\\n" + subtitle);
+        label.setSpan(new android.text.style.RelativeSizeSpan(1.0f), 0, title.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        label.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), 0, title.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        label.setSpan(new android.text.style.RelativeSizeSpan(0.72f), title.length() + 1, label.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        button.setText(label);
+        button.setAllCaps(false);
+        button.setTextColor(textColor);
+        button.setGravity(Gravity.CENTER);
+        button.setTextSize(15);
+        button.setPadding(dp(12), dp(8), dp(12), dp(8));
+        button.setMinHeight(dp(64));
+        button.setBackground(round(backgroundColor, 18));
+        button.setElevation(dp(4));
+        return button;
     }
 
     private boolean isBazaarBillingConfigured() {
