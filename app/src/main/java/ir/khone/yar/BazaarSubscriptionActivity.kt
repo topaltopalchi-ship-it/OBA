@@ -21,9 +21,11 @@ class BazaarSubscriptionActivity : ComponentActivity() {
     private val apiKey = "sb_publishable_AQdI9Ehm-lf7p1Rs7bu4BA_m60TTlen"
     private var accessToken = ""
     private var userId = ""
+    private var restoreOnly = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        restoreOnly = intent.getBooleanExtra("restore_only", false)
         val auth = getSharedPreferences("oba_auth", MODE_PRIVATE)
         if (auth.getString("mode", "guest") != "account") {
             fail("برای خرید و بازیابی اشتراک، ابتدا وارد حساب اوبا شو.")
@@ -70,7 +72,10 @@ class BazaarSubscriptionActivity : ComponentActivity() {
                                 finish()
                             }
                         } else {
-                            runOnUiThread { startSubscription(billing, message) }
+                            runOnUiThread {
+                                if (restoreOnly) fail(message ?: "خریدی که قابل تأیید باشد پیدا نشد. خرید جدید انجام ندادیم؛ لطفاً دوباره بازیابی را امتحان کن.")
+                                else startSubscription(billing, message)
+                            }
                         }
                     }
                 } else {
@@ -81,7 +86,10 @@ class BazaarSubscriptionActivity : ComponentActivity() {
                                 finish()
                             }
                         } else {
-                            runOnUiThread { startSubscription(billing, null) }
+                            runOnUiThread {
+                                if (restoreOnly) fail("اشتراک فعالی در بازار یا حساب اوبا پیدا نشد. برای جلوگیری از پرداخت دوباره، صفحهٔ خرید باز نشد.")
+                                else startSubscription(billing, null)
+                            }
                         }
                     }
                 }
