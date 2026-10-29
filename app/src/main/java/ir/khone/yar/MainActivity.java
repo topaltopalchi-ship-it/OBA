@@ -50,6 +50,7 @@ import org.json.JSONException;
 public class MainActivity extends Activity {
     private LinearLayout root, cards;
     private TextView status, recent, remindersView, inventoryView;
+    private TextView subscriptionStatusView;
     private EditText reminderDraftInput;
     private AlertDialog reminderDraftDialog;
     private SharedPreferences prefs;
@@ -121,6 +122,7 @@ public class MainActivity extends Activity {
             }
         });
         buildUi();
+        refreshSubscriptionStatus(subscriptionStatusView);
         // Restore scheduled text reminders with vibration notifications.
         ReminderReceiver.restore(this);
         // Voice wake-up by saying "OBA" is disabled; voice commands remain available from other controls.
@@ -144,6 +146,7 @@ public class MainActivity extends Activity {
         super.onResume();
         // Re-register saved reminders when returning from Android's exact-alarm settings.
         if (prefs != null) ReminderReceiver.restore(this);
+        if (subscriptionStatusView != null) refreshSubscriptionStatus(subscriptionStatusView);
     }
 
     private void ensureExactAlarmAccess() {
@@ -198,7 +201,12 @@ public class MainActivity extends Activity {
                 .setNegativeButton("بستن", null)
                 .show();
         });
-        content.addView(subscriptionButton, lp(-1, -2, 0, 2, 0, 8));
+        content.addView(subscriptionButton, lp(-1, -2, 0, 2, 0, 2));
+
+        subscriptionStatusView = text("وضعیت اشتراک: در حال بررسی…", 14, dark, true);
+        subscriptionStatusView.setGravity(Gravity.CENTER);
+        subscriptionStatusView.setPadding(dp(8), dp(3), dp(8), dp(5));
+        content.addView(subscriptionStatusView, lp(-1, -2, 0, 0, 0, 6));
 
         // Primary dashboard control: explicit opt-in continuous listening for expense entries.
         continuousExpenseButton = new Button(this);
@@ -392,6 +400,61 @@ public class MainActivity extends Activity {
                 showQuotaDialog(featureKey);
             }
         }));
+    }
+
+    private void refreshSubscriptionStatus(TextView target) {
+        if (target == null) return;
+        SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
+        String mode = auth.getString("mode", "guest");
+        String access = auth.getString("access_token", "");
+        if (!"account".equals(mode) || access.isEmpty()) {
+            target.setText("وضعیت اشتراک: برای بررسی، وارد حساب اوبا شو");
+            return;
+        }
+        target.setText("وضعیت اشتراک: در حال بررسی…");
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL("https://sxyaujvliummbvzznejq.supabase.co/functions/v1/verify-bazaar-subscription");
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setConnectTimeout(12000);
+                connection.setReadTimeout(12000);
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                connection.setRequestProperty("apikey", "sb_publishable_AQdI9Ehm-lf7p1Rs7bu4BA_m60TTlen");
+                connection.setRequestProperty("Authorization", "Bearer " + access);
+                byte[] body = "{}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                try (OutputStream out = connection.getOutputStream()) { out.write(body); }
+                int code = connection.getResponseCode();
+                InputStream stream = code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream();
+                StringBuilder response = new StringBuilder();
+                if (stream != null) {
+                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, java.nio.charset.StandardCharsets.UTF_8))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) response.append(line);
+                    }
+                }
+                JSONObject result = new JSONObject(response.toString());
+                final String message;
+                if (code >= 200 && code < 300 && result.optBoolean("active", false)) {
+                    String expires = result.optString("expires_at", "");
+                    String date = expires.length() >= 10 ? expires.substring(0, 10).replace('-', '/') : "نامشخص";
+                    message = "اشتراک سه‌ماهه فعال است • اعتبار تا " + date;
+                } else if (code >= 200 && code < 300) {
+                    message = "اشتراک فعالی برای این حساب پیدا نشد؛ اگر خرید کرده‌ای، بازیابی خرید را انجام بده.";
+                } else if (code == 401) {
+                    message = "نشست حساب منقضی شده؛ دوباره وارد حساب اوبا شو.";
+                } else {
+                    message = result.optString("error", "بررسی وضعیت اشتراک ناموفق بود؛ اینترنت را بررسی کن.");
+                }
+                runOnUiThread(() -> { if (!isFinishing() && target == subscriptionStatusView) target.setText(message); });
+            } catch (Exception e) {
+                runOnUiThread(() -> { if (!isFinishing() && target == subscriptionStatusView) target.setText("وضعیت اشتراک دریافت نشد؛ اتصال اینترنت را بررسی کن."); });
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }).start();
     }
 
     private void openAccountScreen() {
