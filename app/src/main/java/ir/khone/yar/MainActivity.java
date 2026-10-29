@@ -193,7 +193,7 @@ public class MainActivity extends Activity {
         continuousExpenseButton.setBackground(voiceFace);
         continuousExpenseButton.setElevation(dp(7));
         continuousExpenseButton.setMinHeight(dp(62));
-        continuousExpenseButton.setOnClickListener(v -> toggleContinuousExpenseListening());
+        continuousExpenseButton.setOnClickListener(v -> runFeature("voice_entry", this::toggleContinuousExpenseListening));
         content.addView(continuousExpenseButton, lp(-1, -2, 0, 3, 0, 6));
 
         TextView transcriptLabel = text("متن شنیده‌شده و فهرست موقت هزینه‌ها", 15, dark, true);
@@ -250,12 +250,12 @@ public class MainActivity extends Activity {
         budgetFace.setStroke(dp(2), Color.rgb(255, 190, 205));
         budgetButton.setBackground(budgetFace);
         budgetButton.setElevation(dp(5));
-        budgetButton.setOnClickListener(v -> showBudgetDialog());
+        budgetButton.setOnClickListener(v -> runFeature("budget", this::showBudgetDialog));
         content.addView(budgetButton, lp(-1, -2, 0, 2, 0, 8));
 
         Button shoppingListButton = button("🛒 لیست خرید", Color.rgb(221, 245, 232), dark, 17);
         shoppingListButton.setMinHeight(dp(50));
-        shoppingListButton.setOnClickListener(v -> showShoppingList());
+        shoppingListButton.setOnClickListener(v -> runFeature("shopping_list", this::showShoppingList));
         content.addView(shoppingListButton, lp(-1, -2, 0, 2, 0, 8));
 
         TextView categoryTitle = text("دسته‌بندی هزینه‌ها", 18, dark, true);
@@ -271,7 +271,7 @@ public class MainActivity extends Activity {
                 final String category = categoryButtons[j][1];
                 Button categoryButton = button(categoryButtons[j][0], Color.WHITE, dark, 15);
                 categoryButton.setMinHeight(dp(42));
-                categoryButton.setOnClickListener(v -> showCategorySubgroups(category));
+                categoryButton.setOnClickListener(v -> runFeature(featureKeyForCategory(category), () -> showCategorySubgroups(category)));
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(44), 1);
                 p.setMargins(dp(3), dp(2), dp(3), dp(2));
                 row.addView(categoryButton, p);
@@ -286,11 +286,11 @@ public class MainActivity extends Activity {
         LinearLayout toolsRow = new LinearLayout(this);
         toolsRow.setOrientation(LinearLayout.HORIZONTAL);
         Button docsBtn = button("📄 مدارک", Color.WHITE, dark, 11);
-        docsBtn.setOnClickListener(v -> showHomeDocuments());
+        docsBtn.setOnClickListener(v -> runFeature("documents", this::showHomeDocuments));
         Button backupBtn = button("💾 پشتیبان", Color.WHITE, dark, 11);
-        backupBtn.setOnClickListener(v -> showBackupOptions());
+        backupBtn.setOnClickListener(v -> runFeature("backup", this::showBackupOptions));
         Button chartBtn = button("📊 هزینه‌ها", Color.WHITE, dark, 11);
-        chartBtn.setOnClickListener(v -> showExpenseCharts());
+        chartBtn.setOnClickListener(v -> runFeature("expense_charts", this::showExpenseCharts));
         // Distinct but coordinated dashboard colors for the three utility buttons.
         Button[] toolButtons = {docsBtn, backupBtn, chartBtn};
         int[][] toolGradients = {
@@ -325,11 +325,11 @@ public class MainActivity extends Activity {
         content.addView(toolsRow, lp(-1, -2, 0, 1, 0, 2));
         Button calendarBtn = button("🗓️ تقویم و آرشیو خریدها", Color.rgb(224, 240, 255), dark, 15);
         calendarBtn.setMinHeight(dp(48));
-        calendarBtn.setOnClickListener(v -> showPurchaseCenter());
+        calendarBtn.setOnClickListener(v -> runFeature("purchase_center", this::showPurchaseCenter));
         content.addView(calendarBtn, lp(-1, -2, 0, 2, 0, 6));
         Button smartBtn = button("🧠 تحلیل هوشمند هزینه‌ها و راهکار صرفه‌جویی", Color.rgb(255, 244, 220), dark, 14);
         smartBtn.setMinHeight(dp(44));
-        smartBtn.setOnClickListener(v -> showSmartExpenseAnalysis());
+        smartBtn.setOnClickListener(v -> runFeature("smart_analysis", this::showSmartExpenseAnalysis));
         content.addView(smartBtn, lp(-1, -2, 0, 2, 0, 4));
         // Keep every home-screen action reachable on short displays by scrolling the content.
         ScrollView homeScroll = new ScrollView(this);
@@ -345,6 +345,64 @@ public class MainActivity extends Activity {
 
 
 
+
+    private String featureKeyForCategory(String category) {
+        if ("خانه".equals(category)) return "home_expense";
+        if ("ماشین".equals(category)) return "vehicle_expense";
+        if ("مغازه".equals(category)) return "shop_expense";
+        if ("مدرسه".equals(category)) return "school_expense";
+        if ("سلامت".equals(category)) return "health_expense";
+        return "other_expense";
+    }
+
+    private void runFeature(String featureKey, Runnable action) {
+        OBAQuota.consume(this, featureKey, (allowed, used, error) -> runOnUiThread(() -> {
+            if (error != null) {
+                Toast.makeText(this, error, Toast.LENGTH_LONG).show();
+                return;
+            }
+            if (allowed) {
+                action.run();
+            } else {
+                showQuotaDialog(featureKey);
+            }
+        }));
+    }
+
+    private void showQuotaDialog(String featureKey) {
+        String featureName;
+        switch (featureKey) {
+            case "voice_entry": featureName = "ثبت صوتی"; break;
+            case "budget": featureName = "بودجه"; break;
+            case "shopping_list": featureName = "لیست خرید"; break;
+            case "home_expense": featureName = "هزینه‌های خانه"; break;
+            case "vehicle_expense": featureName = "هزینه‌های ماشین"; break;
+            case "shop_expense": featureName = "هزینه‌های مغازه"; break;
+            case "school_expense": featureName = "هزینه‌های مدرسه"; break;
+            case "health_expense": featureName = "هزینه‌های سلامت"; break;
+            case "other_expense": featureName = "هزینه‌های سایر"; break;
+            case "documents": featureName = "مدارک خانه"; break;
+            case "backup": featureName = "پشتیبان‌گیری"; break;
+            case "expense_charts": featureName = "نمودار هزینه‌ها"; break;
+            case "purchase_center": featureName = "تقویم و آرشیو خریدها"; break;
+            case "smart_analysis": featureName = "تحلیل هوشمند"; break;
+            default: featureName = "این قابلیت"; break;
+        }
+        new AlertDialog.Builder(this)
+            .setTitle("پایان سهمیهٔ رایگان")
+            .setMessage("۱۰ استفادهٔ رایگان از «" + featureName + "» تمام شده است. برای ادامه، حساب بساز یا وارد حساب خودت شو و اشتراک سه‌ماهه را فعال کن. سهمیهٔ قابلیت‌های دیگر جداگانه محاسبه می‌شود.")
+            .setNegativeButton("بعداً", (d, w) -> d.dismiss())
+            .setNeutralButton("ساخت حساب / ورود", (d, w) -> {
+                startActivity(new Intent(this, OBAAuthActivity.class));
+            })
+            .setPositiveButton("اشتراک سه‌ماهه", (d, w) -> new AlertDialog.Builder(this)
+                .setTitle("اشتراک اوبا")
+                .setMessage("برای فعال‌سازی پرداخت واقعی بازار، شناسهٔ محصول اشتراک سه‌ماهه باید در تنظیمات فروشگاه و برنامه ثبت و تأیید شود.")
+                .setPositiveButton("ساخت حساب / ورود", (d2, w2) -> startActivity(new Intent(this, OBAAuthActivity.class)))
+                .setNegativeButton("بستن", null)
+                .show())
+            .show();
+    }
 
     private void showBudgetDialog() {
         long currentBudget = Math.max(0L, prefs.getLong("home_budget", 0L));
