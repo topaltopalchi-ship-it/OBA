@@ -61,7 +61,7 @@ public class OBAAuthActivity extends Activity {
         TextView note = text("در حالت رایگان، سهمیهٔ هر قابلیت جداگانه محاسبه می‌شود. برای بازیابی حساب در گوشی دیگر، حساب بساز.", 14, Color.DKGRAY, false);
         note.setGravity(Gravity.CENTER);
         page.addView(note, params(-1, -2, 0, 12, 0, 0));
-        setContentView(page);
+        setPage();
     }
 
     private void showAccountForm(boolean signup) {
@@ -94,7 +94,7 @@ public class OBAAuthActivity extends Activity {
         Button back = button("بازگشت به انتخاب مسیر", Color.WHITE, navy);
         back.setOnClickListener(v -> showWelcome());
         page.addView(back, params(-1, dp(48), 0, 0, 0, 0));
-        setContentView(page);
+        setPage();
     }
 
     private void submit() {
@@ -197,7 +197,9 @@ public class OBAAuthActivity extends Activity {
     }
 
     private void openApp() {
-        startActivity(new Intent(this, MainActivity.class));
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 
@@ -207,12 +209,15 @@ public class OBAAuthActivity extends Activity {
         layout.setPadding(dp(20), dp(24), dp(20), dp(24));
         layout.setGravity(Gravity.CENTER_VERTICAL);
         layout.setBackgroundColor(Color.rgb(244, 248, 255));
+        page = layout;
+        return layout;
+    }
+
+    private void setPage() {
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
-        scroll.addView(layout);
-        page = layout;
-        // The ScrollView wrapper is applied by setPage below so the controls remain scrollable.
-        return layout;
+        scroll.addView(page);
+        setContentView(scroll);
     }
 
     private EditText edit(String hint, int inputType) {
