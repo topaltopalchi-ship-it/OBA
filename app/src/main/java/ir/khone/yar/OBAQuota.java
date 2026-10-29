@@ -82,9 +82,7 @@ final class OBAQuota {
         if (refresh.isEmpty()) throw new Exception("نشست حساب منقضی شده است؛ دوباره وارد شو.");
         JSONObject body = new JSONObject();
         body.put("refresh_token", refresh);
-        HttpURLConnection c = new URL(API_URL + "/auth/v1/token?grant_type=refresh_token").openConnection() instanceof HttpURLConnection
-            ? (HttpURLConnection) new URL(API_URL + "/auth/v1/token?grant_type=refresh_token").openConnection()
-            : null;
+        HttpURLConnection c = (HttpURLConnection) new URL(API_URL + "/auth/v1/token?grant_type=refresh_token").openConnection();
         if (c == null) throw new Exception("نوسازی ورود انجام نشد.");
         c.setRequestMethod("POST");
         c.setConnectTimeout(10000);
