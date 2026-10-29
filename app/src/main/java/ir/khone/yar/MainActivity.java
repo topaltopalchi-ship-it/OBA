@@ -202,10 +202,10 @@ public class MainActivity extends Activity {
         continuousTranscriptView.setGravity(Gravity.RIGHT | Gravity.TOP);
         continuousTranscriptView.setMinHeight(dp(104));
         continuousTranscriptView.setPadding(dp(12), dp(10), dp(12), dp(10));
-        GradientDrawable transcriptBox = round(Color.WHITE, 12);
+        GradientDrawable transcriptBox = round(Color.rgb(45, 62, 150), 12);
         transcriptBox.setStroke(dp(1), Color.rgb(210, 216, 220));
         continuousTranscriptView.setBackground(transcriptBox);
-        continuousTranscriptView.setTextColor(dark);
+        continuousTranscriptView.setTextColor(Color.WHITE);
         continuousTranscriptView.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
         continuousTranscriptView.setLineSpacing(dp(3), 1.08f);
         continuousTranscriptView.setTextIsSelectable(true);
