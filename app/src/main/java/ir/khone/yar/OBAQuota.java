@@ -18,6 +18,11 @@ final class OBAQuota {
     private OBAQuota() {}
 
     static void consume(Context context, String featureKey, Callback callback) {
+        SharedPreferences subscription = context.getSharedPreferences("oba_subscription", Context.MODE_PRIVATE);
+        if (subscription.getBoolean("active", false)) {
+            callback.complete(true, 0, null);
+            return;
+        }
         SharedPreferences auth = context.getSharedPreferences("oba_auth", Context.MODE_PRIVATE);
         if (!"account".equals(auth.getString("mode", "guest"))) {
             SharedPreferences local = context.getSharedPreferences("oba_quota", Context.MODE_PRIVATE);
