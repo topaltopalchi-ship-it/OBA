@@ -156,7 +156,7 @@ class BazaarSubscriptionActivity : ComponentActivity() {
                 if (status !in 200..299) {
                     callback(false, result.optString("error").ifBlank { "تأیید اشتراک از سرور انجام نشد." })
                 } else {
-                    callback(result.optBoolean("active", false), result.optString("error").ifBlank { null })
+                    callback(result.optBoolean("active", false), if (result.has("error")) result.optString("error") else null)
                 }
             } catch (e: Exception) {
                 callback(false, "ارتباط با سرور برای تأیید خرید برقرار نشد؛ دسترسی ویژه فعال نشد.")
