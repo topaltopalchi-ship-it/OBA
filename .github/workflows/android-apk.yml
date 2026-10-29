@@ -2,7 +2,7 @@ name: Build OBA Android APK
 
 on:
   push:
-    branches: [ main, fix/offline-persian-tts, test/disable-vosk-recognition, test/mic-button-noop, feature/always-on-oba-wakeword ]
+    branches: [ main, fix/offline-persian-tts, test/disable-vosk-recognition, test/mic-button-noop, feature/always-on-oba-wakeword, feature/bazaar-subscription-oba ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
