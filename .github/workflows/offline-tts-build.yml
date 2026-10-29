@@ -33,6 +33,9 @@ jobs:
           yes | "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Build debug APK
+        env:
+          OBA_BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.OBA_BAZAAR_RSA_PUBLIC_KEY }}
+          OBA_BAZAAR_SUBSCRIPTION_ID: ${{ vars.OBA_BAZAAR_SUBSCRIPTION_ID }}
         run: gradle --no-daemon :app:assembleDebug
 
       - name: Upload APK

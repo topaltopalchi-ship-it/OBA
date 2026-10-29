@@ -47,6 +47,8 @@ jobs:
 
       - name: Build signed release AAB
         env:
+          OBA_BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.OBA_BAZAAR_RSA_PUBLIC_KEY }}
+          OBA_BAZAAR_SUBSCRIPTION_ID: ${{ vars.OBA_BAZAAR_SUBSCRIPTION_ID }}
           OBA_KEYSTORE_PATH: ${{ runner.temp }}/oba-release.jks
           OBA_KEYSTORE_PASSWORD: ${{ secrets.OBA_KEYSTORE_PASSWORD }}
           OBA_KEY_ALIAS: ${{ secrets.OBA_KEY_ALIAS }}

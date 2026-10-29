@@ -173,7 +173,39 @@ public class MainActivity extends Activity {
         TextView brand = text("🏠 OBA", 27, dark, true); brand.setGravity(Gravity.CENTER);
         content.addView(brand, lp(-1, -2, 0, 4, 0, 1));
         TextView subtitle = text("مدیریت خانه، فقط با حرف زدن", 16, Color.DKGRAY, false); subtitle.setGravity(Gravity.CENTER);
-        content.addView(subtitle, lp(-1, -2, 0, 0, 0, 8));
+        content.addView(subtitle, lp(-1, -2, 0, 0, 0, 5));
+
+        // Persistent subscription entry point: purchase or restore from the home screen.
+        Button subscriptionButton = button("⭐ خرید اشتراک اوبا / بازیابی خرید بازار", Color.rgb(0, 91, 82), Color.WHITE, 16);
+        subscriptionButton.setMinHeight(dp(52));
+        subscriptionButton.setOnClickListener(v -> {
+            SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
+            if (!"account".equals(auth.getString("mode", "guest"))) {
+                new AlertDialog.Builder(this)
+                    .setTitle("ورود به حساب اوبا")
+                    .setMessage("برای خرید یا بازیابی اشتراک، ابتدا وارد حساب اوبا شو تا اشتراک به شناسهٔ حساب خودت متصل شود.")
+                    .setNegativeButton("بعداً", (dialog, which) -> dialog.dismiss())
+                    .setPositiveButton("ورود / ساخت حساب", (dialog, which) -> openAccountScreen())
+                    .show();
+                return;
+            }
+            new AlertDialog.Builder(this)
+                .setTitle("اشتراک اوبا")
+                .setMessage("خرید اشتراک یا بازیابی خرید قبلی را انتخاب کن. بازیابی هیچ پرداخت جدیدی انجام نمی‌دهد.")
+                .setPositiveButton("خرید اشتراک", (dialog, which) -> {
+                    Intent intent = new Intent(this, BazaarSubscriptionActivity.class);
+                    intent.putExtra("restore_only", false);
+                    startActivity(intent);
+                })
+                .setNegativeButton("بازیابی خرید قبلی", (dialog, which) -> {
+                    Intent intent = new Intent(this, BazaarSubscriptionActivity.class);
+                    intent.putExtra("restore_only", true);
+                    startActivity(intent);
+                })
+                .setNeutralButton("انصراف", (dialog, which) -> dialog.dismiss())
+                .show();
+        });
+        content.addView(subscriptionButton, lp(-1, -2, 0, 0, 0, 8));
 
         // Primary dashboard control: explicit opt-in continuous listening for expense entries.
         continuousExpenseButton = new Button(this);
@@ -411,8 +443,8 @@ public class MainActivity extends Activity {
             })
             .setPositiveButton("اشتراک سه‌ماهه", (d, w) -> new AlertDialog.Builder(this)
                 .setTitle("اشتراک اوبا")
-                .setMessage("برای فعال‌سازی پرداخت واقعی بازار، شناسهٔ محصول اشتراک سه‌ماهه باید در تنظیمات فروشگاه و برنامه ثبت و تأیید شود.")
-                .setPositiveButton("ساخت حساب / ورود", (d2, w2) -> startActivity(new Intent(this, OBAAuthActivity.class)))
+                .setMessage("اشتراک سه‌ماههٔ اوبا از طریق بازار با شناسهٔ محصول OBA110 فعال می‌شود. برای خرید یا بازیابی اشتراک، ادامه بده.")
+                .setPositiveButton("ادامه به بازار", (d2, w2) -> startActivity(new Intent(this, BazaarSubscriptionActivity.class)))
                 .setNegativeButton("بستن", null)
                 .show())
             .show();

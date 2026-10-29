@@ -34,6 +34,10 @@ final class OBAQuota {
         new Thread(() -> {
             try {
                 String token = validAccessToken(context);
+                if (hasActiveServerSubscription(token)) {
+                    callback.complete(true, 0, null);
+                    return;
+                }
                 JSONObject body = new JSONObject();
                 body.put("p_feature_key", featureKey);
                 HttpURLConnection c = open("/rest/v1/rpc/oba_consume_feature_use", token);
@@ -72,6 +76,27 @@ final class OBAQuota {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static boolean hasActiveServerSubscription(String token) throws Exception {
+        HttpURLConnection c = (HttpURLConnection) new URL(API_URL + "/functions/v1/verify-bazaar-subscription").openConnection();
+        c.setRequestMethod("POST");
+        c.setConnectTimeout(10000);
+        c.setReadTimeout(10000);
+        c.setDoOutput(true);
+        c.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        c.setRequestProperty("apikey", API_KEY);
+        c.setRequestProperty("Authorization", "Bearer " + token);
+        try (OutputStream out = c.getOutputStream()) {
+            out.write(new JSONObject().put("productId", "OBA110").toString().getBytes(StandardCharsets.UTF_8));
+        }
+        int status = c.getResponseCode();
+        String response = readResponse(c, status);
+        c.disconnect();
+        if (status < 200 || status >= 300) {
+            throw new Exception("امکان بررسی اشتراک در سرور نیست؛ اینترنت را بررسی کن.");
+        }
+        return new JSONObject(response).optBoolean("active", false);
     }
 
     private static String validAccessToken(Context context) throws Exception {
