@@ -369,6 +369,14 @@ public class MainActivity extends Activity {
         }));
     }
 
+    private void openAccountScreen() {
+        boolean hasAccountMode = "account".equals(getSharedPreferences("oba_auth", MODE_PRIVATE).getString("mode", "guest"));
+        Intent intent = new Intent(this, OBAAuthActivity.class);
+        intent.putExtra("open_account_form", true);
+        intent.putExtra("open_login", hasAccountMode);
+        startActivity(intent);
+    }
+
     private void showQuotaDialog(String featureKey) {
         String featureName;
         switch (featureKey) {
@@ -393,7 +401,7 @@ public class MainActivity extends Activity {
             .setMessage("۱۰ استفادهٔ رایگان از «" + featureName + "» تمام شده است. برای ادامه، حساب بساز یا وارد حساب خودت شو و اشتراک سه‌ماهه را فعال کن. سهمیهٔ قابلیت‌های دیگر جداگانه محاسبه می‌شود.")
             .setNegativeButton("بعداً", (d, w) -> d.dismiss())
             .setNeutralButton("ساخت حساب / ورود", (d, w) -> {
-                startActivity(new Intent(this, OBAAuthActivity.class));
+                openAccountScreen();
             })
             .setPositiveButton("اشتراک سه‌ماهه", (d, w) -> new AlertDialog.Builder(this)
                 .setTitle("اشتراک اوبا")
