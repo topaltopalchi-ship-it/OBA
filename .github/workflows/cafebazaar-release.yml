@@ -1,4 +1,5 @@
 name: Build OBA CafeBazaar AAB and BIN
+# Fresh release build trigger requested 2026-10-29
 
 on:
   workflow_dispatch:
