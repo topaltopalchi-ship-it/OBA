@@ -411,8 +411,8 @@ public class MainActivity extends Activity {
             })
             .setPositiveButton("اشتراک سه‌ماهه", (d, w) -> new AlertDialog.Builder(this)
                 .setTitle("اشتراک اوبا")
-                .setMessage("برای فعال‌سازی پرداخت واقعی بازار، شناسهٔ محصول اشتراک سه‌ماهه باید در تنظیمات فروشگاه و برنامه ثبت و تأیید شود.")
-                .setPositiveButton("ساخت حساب / ورود", (d2, w2) -> startActivity(new Intent(this, OBAAuthActivity.class)))
+                .setMessage("اشتراک سه‌ماههٔ اوبا از طریق بازار با شناسهٔ محصول OBA110 فعال می‌شود. برای خرید یا بازیابی اشتراک، ادامه بده.")
+                .setPositiveButton("ادامه به بازار", (d2, w2) -> startActivity(new Intent(this, BazaarSubscriptionActivity.class)))
                 .setNegativeButton("بستن", null)
                 .show())
             .show();
