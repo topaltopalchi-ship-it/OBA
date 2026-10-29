@@ -173,7 +173,25 @@ public class MainActivity extends Activity {
         TextView brand = text("🏠 OBA", 27, dark, true); brand.setGravity(Gravity.CENTER);
         content.addView(brand, lp(-1, -2, 0, 4, 0, 1));
         TextView subtitle = text("مدیریت خانه، فقط با حرف زدن", 16, Color.DKGRAY, false); subtitle.setGravity(Gravity.CENTER);
-        content.addView(subtitle, lp(-1, -2, 0, 0, 0, 8));
+        content.addView(subtitle, lp(-1, -2, 0, 0, 0, 5));
+
+        // Persistent subscription entry point: purchase or restore from the home screen.
+        Button subscriptionButton = button("⭐ خرید / بازیابی اشتراک سه‌ماهه", Color.rgb(0, 91, 82), Color.WHITE, 16);
+        subscriptionButton.setMinHeight(dp(52));
+        subscriptionButton.setOnClickListener(v -> {
+            SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
+            if (!"account".equals(auth.getString("mode", "guest"))) {
+                new AlertDialog.Builder(this)
+                    .setTitle("ورود به حساب اوبا")
+                    .setMessage("برای خرید یا بازیابی اشتراک، ابتدا وارد حساب اوبا شو تا اشتراک به شناسهٔ حساب خودت متصل شود.")
+                    .setNegativeButton("بعداً", (dialog, which) -> dialog.dismiss())
+                    .setPositiveButton("ورود / ساخت حساب", (dialog, which) -> openAccountScreen())
+                    .show();
+                return;
+            }
+            startActivity(new Intent(this, BazaarSubscriptionActivity.class));
+        });
+        content.addView(subscriptionButton, lp(-1, -2, 0, 0, 0, 8));
 
         // Primary dashboard control: explicit opt-in continuous listening for expense entries.
         continuousExpenseButton = new Button(this);
