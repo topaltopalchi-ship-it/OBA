@@ -394,6 +394,12 @@ public class MainActivity extends Activity {
             case "expense_charts": featureName = "نمودار هزینه‌ها"; break;
             case "purchase_center": featureName = "تقویم و آرشیو خریدها"; break;
             case "smart_analysis": featureName = "تحلیل هوشمند"; break;
+            case "subgroup_archive": featureName = "آرشیو خرید زیرگروه"; break;
+            case "expense_calendar": featureName = "تقویم مخارج"; break;
+            case "daily_purchase_archive": featureName = "آرشیو خریدهای روزانه"; break;
+            case "category_purchase_archive": featureName = "آرشیو خریدهای دسته‌بندی‌شده"; break;
+            case "monthly_item_report": featureName = "گزارش ماهانهٔ کالا"; break;
+            case "reminder_archive": featureName = "آرشیو یادآوری‌ها"; break;
             default: featureName = "این قابلیت"; break;
         }
         new AlertDialog.Builder(this)
