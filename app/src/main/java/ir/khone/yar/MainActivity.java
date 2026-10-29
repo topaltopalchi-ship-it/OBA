@@ -189,7 +189,21 @@ public class MainActivity extends Activity {
                     .show();
                 return;
             }
-            startActivity(new Intent(this, BazaarSubscriptionActivity.class));
+            new AlertDialog.Builder(this)
+                .setTitle("اشتراک اوبا")
+                .setMessage("خرید اشتراک یا بازیابی خرید قبلی را انتخاب کن. بازیابی هیچ پرداخت جدیدی انجام نمی‌دهد.")
+                .setPositiveButton("خرید اشتراک", (dialog, which) -> {
+                    Intent intent = new Intent(this, BazaarSubscriptionActivity.class);
+                    intent.putExtra("restore_only", false);
+                    startActivity(intent);
+                })
+                .setNegativeButton("بازیابی خرید قبلی", (dialog, which) -> {
+                    Intent intent = new Intent(this, BazaarSubscriptionActivity.class);
+                    intent.putExtra("restore_only", true);
+                    startActivity(intent);
+                })
+                .setNeutralButton("انصراف", (dialog, which) -> dialog.dismiss())
+                .show();
         });
         content.addView(subscriptionButton, lp(-1, -2, 0, 0, 0, 8));
 
