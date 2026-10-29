@@ -175,6 +175,31 @@ public class MainActivity extends Activity {
         TextView subtitle = text("مدیریت خانه، فقط با حرف زدن", 16, Color.DKGRAY, false); subtitle.setGravity(Gravity.CENTER);
         content.addView(subtitle, lp(-1, -2, 0, 0, 0, 8));
 
+        // Restore the subscription entry point on the home screen.
+        Button subscriptionButton = button("⭐ خرید اشتراک اوبا / بازیابی خرید بازار", Color.rgb(48, 74, 190), Color.WHITE, 17);
+        subscriptionButton.setMinHeight(dp(58));
+        subscriptionButton.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        GradientDrawable subscriptionFace = new GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[]{Color.rgb(76, 115, 245), Color.rgb(31, 47, 139)}
+        );
+        subscriptionFace.setCornerRadius(dp(18));
+        subscriptionFace.setStroke(dp(2), Color.rgb(180, 199, 255));
+        subscriptionButton.setBackground(subscriptionFace);
+        subscriptionButton.setElevation(dp(6));
+        subscriptionButton.setOnClickListener(v -> {
+            SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
+            String mode = auth.getString("mode", "guest");
+            String message = "برای بررسی و بازیابی اشتراک خریداری‌شده، وارد همان حساب اوبا شو که هنگام خرید استفاده کرده‌ای. اگر قبلاً خرید کرده‌ای، دوباره پرداخت نکن.";
+            new AlertDialog.Builder(this)
+                .setTitle("اشتراک اوبا")
+                .setMessage(message)
+                .setPositiveButton("ساخت حساب / ورود", (d, w) -> openAccountScreen())
+                .setNegativeButton("بستن", null)
+                .show();
+        });
+        content.addView(subscriptionButton, lp(-1, -2, 0, 2, 0, 8));
+
         // Primary dashboard control: explicit opt-in continuous listening for expense entries.
         continuousExpenseButton = new Button(this);
         continuousExpenseButton.setText("🎙  شروع ثبت");
