@@ -92,6 +92,12 @@ public class OBAAuthActivity extends Activity {
         submitButton.setOnClickListener(v -> submit());
         page.addView(submitButton, params(-1, dp(54), 0, 0, 0, 10));
 
+        if (!signup) {
+            Button forgotPassword = button("فراموشی رمز عبور؛ ارسال لینک به جیمیل", Color.WHITE, teal);
+            forgotPassword.setOnClickListener(v -> sendPasswordReset());
+            page.addView(forgotPassword, params(-1, dp(48), 0, 0, 0, 10));
+        }
+
         Button switchMode = button(signup ? "قبلاً حساب دارم؛ ورود" : "حساب ندارم؛ ساخت حساب", Color.rgb(232, 238, 249), navy);
         switchMode.setOnClickListener(v -> showAccountForm(!registerMode));
         page.addView(switchMode, params(-1, dp(50), 0, 0, 0, 10));
@@ -170,6 +176,89 @@ public class OBAAuthActivity extends Activity {
                 });
             }
         }).start();
+    }
+
+    private void sendPasswordReset() {
+        String email = "";
+        if (identifierInput != null) {
+            String identifier = identifierInput.getText().toString().trim().toLowerCase();
+            if (identifier.contains("@")) email = identifier;
+        }
+        if (email.isEmpty()) {
+            EditText emailField = new EditText(this);
+            emailField.setSingleLine(true);
+            emailField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+            emailField.setHint("جیمیل حساب اوبا");
+            new AlertDialog.Builder(this)
+                .setTitle("بازیابی رمز عبور")
+                .setMessage("جیمیلی را وارد کن که هنگام ساخت حساب ثبت کردی.")
+                .setView(emailField)
+                .setNegativeButton("انصراف", null)
+                .setPositiveButton("ارسال لینک", (dialog, which) -> requestPasswordReset(emailField.getText().toString().trim().toLowerCase()))
+                .show();
+            return;
+        }
+        requestPasswordReset(email);
+    }
+
+    private void requestPasswordReset(String email) {
+        if (!email.matches("^[^\\s@]+@gmail\\.com$")) {
+            new AlertDialog.Builder(this).setTitle("جیمیل نامعتبر")
+                .setMessage("لطفاً همان جیمیل ثبت‌شده با دامنه gmail.com را وارد کن.")
+                .setPositiveButton("باشه", null).show();
+            return;
+        }
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                JSONObject body = new JSONObject();
+                body.put("email", email);
+                connection = (HttpURLConnection) new URL(API_URL + "/auth/v1/recover").openConnection();
+                connection.setRequestMethod("POST");
+                connection.setConnectTimeout(12000);
+                connection.setReadTimeout(12000);
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                connection.setRequestProperty("apikey", API_KEY);
+                connection.setRequestProperty("Accept", "application/json");
+                try (OutputStream out = connection.getOutputStream()) {
+                    out.write(body.toString().getBytes(StandardCharsets.UTF_8));
+                }
+                int status = connection.getResponseCode();
+                if (status < 200 || status >= 300) {
+                    String response = readHttpError(connection, status);
+                    throw new Exception(response.isEmpty()
+                        ? "ارسال لینک بازیابی ناموفق بود. تنظیمات ایمیل سرور را بررسی کنید."
+                        : "ارسال لینک بازیابی ناموفق بود؛ چند دقیقه بعد دوباره تلاش کن.");
+                }
+                runOnUiThread(() -> new AlertDialog.Builder(this)
+                    .setTitle("درخواست ثبت شد")
+                    .setMessage("اگر این جیمیل در اوبا ثبت شده باشد و ارسال ایمیل سرور فعال باشد، لینک بازیابی برایت ارسال می‌شود. پوشهٔ هرزنامه (Spam) را هم بررسی کن.")
+                    .setPositiveButton("باشه", null).show());
+            } catch (Exception e) {
+                runOnUiThread(() -> new AlertDialog.Builder(this)
+                    .setTitle("خطا در بازیابی رمز")
+                    .setMessage(e.getMessage() == null ? "ارتباط با سرور برقرار نشد." : e.getMessage())
+                    .setPositiveButton("باشه", null).show());
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }).start();
+    }
+
+    private String readHttpError(HttpURLConnection connection, int status) {
+        try {
+            java.io.InputStream stream = status >= 400 ? connection.getErrorStream() : connection.getInputStream();
+            if (stream == null) return "";
+            StringBuilder response = new StringBuilder();
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) response.append(line);
+            }
+            return response.toString();
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     private JSONObject request(String path, JSONObject payload) throws Exception {
