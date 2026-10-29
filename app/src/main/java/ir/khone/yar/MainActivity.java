@@ -193,7 +193,7 @@ public class MainActivity extends Activity {
         continuousExpenseButton.setBackground(voiceFace);
         continuousExpenseButton.setElevation(dp(7));
         continuousExpenseButton.setMinHeight(dp(62));
-        continuousExpenseButton.setOnClickListener(v -> runFeature("voice_entry", this::toggleContinuousExpenseListening));
+        continuousExpenseButton.setOnClickListener(v -> { if (continuousExpenseListening) toggleContinuousExpenseListening(); else runFeature("voice_entry", this::toggleContinuousExpenseListening); });
         content.addView(continuousExpenseButton, lp(-1, -2, 0, 3, 0, 6));
 
         TextView transcriptLabel = text("متن شنیده‌شده و فهرست موقت هزینه‌ها", 15, dark, true);
@@ -271,7 +271,7 @@ public class MainActivity extends Activity {
                 final String category = categoryButtons[j][1];
                 Button categoryButton = button(categoryButtons[j][0], Color.WHITE, dark, 15);
                 categoryButton.setMinHeight(dp(42));
-                categoryButton.setOnClickListener(v -> runFeature(featureKeyForCategory(category), () -> showCategorySubgroups(category)));
+                categoryButton.setOnClickListener(v -> showCategorySubgroups(category));
                 LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(0, dp(44), 1);
                 p.setMargins(dp(3), dp(2), dp(3), dp(2));
                 row.addView(categoryButton, p);
@@ -325,7 +325,7 @@ public class MainActivity extends Activity {
         content.addView(toolsRow, lp(-1, -2, 0, 1, 0, 2));
         Button calendarBtn = button("🗓️ تقویم و آرشیو خریدها", Color.rgb(224, 240, 255), dark, 15);
         calendarBtn.setMinHeight(dp(48));
-        calendarBtn.setOnClickListener(v -> runFeature("purchase_center", this::showPurchaseCenter));
+        calendarBtn.setOnClickListener(v -> showPurchaseCenter());
         content.addView(calendarBtn, lp(-1, -2, 0, 2, 0, 6));
         Button smartBtn = button("🧠 تحلیل هوشمند هزینه‌ها و راهکار صرفه‌جویی", Color.rgb(255, 244, 220), dark, 14);
         smartBtn.setMinHeight(dp(44));
@@ -1063,10 +1063,10 @@ public class MainActivity extends Activity {
                 final int selectedJalaliDay = jd;
                 final long selectedDayStart = start;
                 Button addReminderButton = button("＋ افزودن یادآوری برای این روز", Color.rgb(255, 239, 205), dark, 14);
-                addReminderButton.setOnClickListener(v -> showAddCalendarReminder(selectedJalaliYear, selectedJalaliMonth, selectedJalaliDay, selectedDayStart));
+                addReminderButton.setOnClickListener(v -> runFeature("reminder", () -> showAddCalendarReminder(selectedJalaliYear, selectedJalaliMonth, selectedJalaliDay, selectedDayStart)));
                 reportCards.addView(addReminderButton, lp(-1, dp(48), 0, dp(8), 0, dp(8)));
                 Button reminderArchiveButton = button("🗂️ آرشیو یادآوری‌ها", Color.rgb(224, 240, 255), dark, 13);
-                reminderArchiveButton.setOnClickListener(v -> showReminderArchive());
+                reminderArchiveButton.setOnClickListener(v -> runFeature("reminder_archive", this::showReminderArchive));
                 reportCards.addView(reminderArchiveButton, lp(-1, dp(44), 0, 0, 0, dp(8)));
 
                 ScrollView reportScroll = new ScrollView(this);
@@ -1539,7 +1539,7 @@ public class MainActivity extends Activity {
             item.setOnClickListener(v -> {
                 dialog.dismiss();
                 if ("خانه".equals(category) && option.contains("اسکن مدارک خانه")) {
-                    showHomeDocuments();
+                    runFeature("documents", this::showHomeDocuments);
                 } else if (!"ماشین".equals(category)) {
                     showNestedSubgroups(category, option);
                 } else {
@@ -1626,7 +1626,7 @@ public class MainActivity extends Activity {
         add.setOnClickListener(v -> showCategoryExpenseForm(category, subgroup));
         Button archive = button("🗂️ آرشیو خریدهای همین زیرمجموعه", Color.WHITE, dark, 16);
         archive.setMinHeight(dp(52));
-        archive.setOnClickListener(v -> showSubgroupPurchaseArchive(category, subgroup));
+        archive.setOnClickListener(v -> runFeature("subgroup_archive", () -> showSubgroupPurchaseArchive(category, subgroup)));
         actions.addView(add, lp(-1, -2, 0, 0, 0, 8));
         actions.addView(archive, lp(-1, -2, 0, 0, 0, 0));
         new AlertDialog.Builder(this)
@@ -1686,10 +1686,10 @@ public class MainActivity extends Activity {
             menu.addView(item, params);
             item.setOnClickListener(v -> {
                 dialog.dismiss();
-                if (selected == 0) showExpenseCalendar();
-                else if (selected == 1) showDailyPurchaseArchive();
-                else if (selected == 2) showPurchaseCategoryPicker();
-                else if (selected == 3) showMonthlyItemReport();
+                if (selected == 0) runFeature("expense_calendar", this::showExpenseCalendar);
+                else if (selected == 1) runFeature("daily_purchase_archive", this::showDailyPurchaseArchive);
+                else if (selected == 2) runFeature("category_purchase_archive", this::showPurchaseCategoryPicker);
+                else if (selected == 3) runFeature("monthly_item_report", this::showMonthlyItemReport);
                 else showPurchaseCategoryPicker();
             });
         }
@@ -1905,15 +1905,18 @@ public class MainActivity extends Activity {
                 String quantity = quantityInput.getText().toString().trim();
                 if (description.isEmpty()) description = subgroup;
                 if (!quantity.isEmpty()) description = description + " — مقدار: " + quantity;
-                expenseTotal += amount;
-                prefs.edit().putLong("expense", expenseTotal).apply();
-                String entryTitle = subgroup + (description.isEmpty() ? "" : " — " + description);
-                addEntry(category, entryTitle, amount);
-                refresh();
-                String confirmation = "هزینه " + fmt(amount) + " تومان در «" + category + " / " + subgroup + "» ثبت شد.";
-                status.setText(confirmation);
-                say(confirmation);
-                Toast.makeText(this, confirmation, Toast.LENGTH_LONG).show();
+                final String savedDescription = description;
+                runFeature(featureKeyForCategory(category), () -> {
+                    expenseTotal += amount;
+                    prefs.edit().putLong("expense", expenseTotal).apply();
+                    String entryTitle = subgroup + (savedDescription.isEmpty() ? "" : " — " + savedDescription);
+                    addEntry(category, entryTitle, amount);
+                    refresh();
+                    String confirmation = "هزینه " + fmt(amount) + " تومان در «" + category + " / " + subgroup + "» ثبت شد.";
+                    status.setText(confirmation);
+                    say(confirmation);
+                    Toast.makeText(this, confirmation, Toast.LENGTH_LONG).show();
+                });
             }).show();
     }
 
