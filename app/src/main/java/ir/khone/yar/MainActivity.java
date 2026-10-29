@@ -176,7 +176,7 @@ public class MainActivity extends Activity {
         content.addView(subtitle, lp(-1, -2, 0, 0, 0, 5));
 
         // Persistent subscription entry point: purchase or restore from the home screen.
-        Button subscriptionButton = button("⭐ خرید / بازیابی اشتراک سه‌ماهه", Color.rgb(0, 91, 82), Color.WHITE, 16);
+        Button subscriptionButton = button("⭐ خرید اشتراک اوبا / بازیابی خرید بازار", Color.rgb(0, 91, 82), Color.WHITE, 16);
         subscriptionButton.setMinHeight(dp(52));
         subscriptionButton.setOnClickListener(v -> {
             SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
