@@ -37,9 +37,25 @@ public class OBAAuthActivity extends Activity {
         super.onCreate(state);
         if (getIntent().getBooleanExtra("open_account_form", false)) {
             showAccountForm(!getIntent().getBooleanExtra("open_login", false));
-        } else {
-            showWelcome();
+            return;
         }
+
+        // Keep the last selected mode across ordinary app closes/restarts.
+        // Only show the welcome/login screen on the first launch or after an explicit logout.
+        SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
+        String mode = auth.getString("mode", "");
+        if ("account".equals(mode)) {
+            String access = auth.getString("access_token", "");
+            String refresh = auth.getString("refresh_token", "");
+            if (!access.isEmpty() || !refresh.isEmpty()) {
+                openApp();
+                return;
+            }
+        } else if ("guest".equals(mode)) {
+            openApp();
+            return;
+        }
+        showWelcome();
     }
 
     private void showWelcome() {
