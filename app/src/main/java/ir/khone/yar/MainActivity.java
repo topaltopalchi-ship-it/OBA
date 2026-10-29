@@ -404,6 +404,38 @@ public class MainActivity extends Activity {
         }));
     }
 
+    private String formatJalaliExpiry(String isoDate) {
+        try {
+            if (isoDate == null || isoDate.length() < 10) return "نامشخص";
+            java.text.SimpleDateFormat parser = new java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US);
+            parser.setLenient(false);
+            Date parsed = parser.parse(isoDate.substring(0, 10));
+            if (parsed == null) return "نامشخص";
+            java.util.Calendar gregorian = java.util.Calendar.getInstance();
+            gregorian.setTime(parsed);
+            int gy = gregorian.get(java.util.Calendar.YEAR);
+            int gm = gregorian.get(java.util.Calendar.MONTH) + 1;
+            int gd = gregorian.get(java.util.Calendar.DAY_OF_MONTH);
+            int[] gdm = {0,31,28,31,30,31,30,31,31,30,31,30,31};
+            if ((gy % 4 == 0 && gy % 100 != 0) || gy % 400 == 0) gdm[2] = 29;
+            int gy2 = gm > 2 ? gy + 1 : gy;
+            int days = 355666 + 365 * gy + (gy2 + 3) / 4 - (gy2 + 99) / 100 + (gy2 + 399) / 400 + gd;
+            for (int i = 1; i < gm; i++) days += gdm[i];
+            int jy = -1595 + 33 * (days / 12053);
+            days %= 12053;
+            jy += 4 * (days / 1461);
+            days %= 1461;
+            if (days > 365) { jy += (days - 1) / 365; days = (days - 1) % 365; }
+            int jm, jd;
+            if (days < 186) { jm = 1 + days / 31; jd = 1 + days % 31; }
+            else { jm = 7 + (days - 186) / 30; jd = 1 + (days - 186) % 30; }
+            return String.format(Locale.US, "%04d/%02d/%02d", jy, jm, jd)
+                .replace('0','۰').replace('1','۱').replace('2','۲').replace('3','۳')
+                .replace('4','۴').replace('5','۵').replace('6','۶').replace('7','۷')
+                .replace('8','۸').replace('9','۹');
+        } catch (Exception e) { return "نامشخص"; }
+    }
+
     private void refreshSubscriptionStatus(TextView target) {
         if (target == null) return;
         SharedPreferences auth = getSharedPreferences("oba_auth", MODE_PRIVATE);
@@ -441,7 +473,7 @@ public class MainActivity extends Activity {
                 final String message;
                 if (code >= 200 && code < 300 && result.optBoolean("active", false)) {
                     String expires = result.optString("expires_at", "");
-                    String date = expires.length() >= 10 ? expires.substring(0, 10).replace('-', '/') : "نامشخص";
+                    String date = formatJalaliExpiry(expires);
                     message = "اشتراک سه‌ماهه فعال است • اعتبار تا " + date;
                 } else if (code >= 200 && code < 300) {
                     message = "اشتراک فعالی برای این حساب پیدا نشد؛ اگر خرید کرده‌ای، بازیابی خرید را انجام بده.";
