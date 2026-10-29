@@ -32,6 +32,9 @@ jobs:
           gradle-version: '8.9'
           cache-provider: basic
       - name: Build and test debug APK
+        env:
+          OBA_BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.OBA_BAZAAR_RSA_PUBLIC_KEY }}
+          OBA_BAZAAR_SUBSCRIPTION_ID: ${{ vars.OBA_BAZAAR_SUBSCRIPTION_ID }}
         run: gradle --no-daemon testDebugUnitTest assembleDebug
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -66,6 +69,8 @@ jobs:
       - name: Build signed release APK
         if: steps.release-signing.outputs.configured == 'true'
         env:
+          OBA_BAZAAR_RSA_PUBLIC_KEY: ${{ secrets.OBA_BAZAAR_RSA_PUBLIC_KEY }}
+          OBA_BAZAAR_SUBSCRIPTION_ID: ${{ vars.OBA_BAZAAR_SUBSCRIPTION_ID }}
           OBA_KEYSTORE_PATH: ${{ steps.release-signing.outputs.keystore_path }}
           OBA_KEYSTORE_PASSWORD: ${{ secrets.OBA_KEYSTORE_PASSWORD }}
           OBA_KEY_ALIAS: ${{ secrets.OBA_KEY_ALIAS }}
