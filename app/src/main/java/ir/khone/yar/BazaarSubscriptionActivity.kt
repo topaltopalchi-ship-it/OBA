@@ -95,7 +95,6 @@ class BazaarSubscriptionActivity : ComponentActivity() {
     private fun startSubscription(billing: Payment, previousMessage: String?) {
         val request = PurchaseRequest(
             productId = BuildConfig.BAZAAR_SUBSCRIPTION_ID,
-            requestCode = 7101,
             payload = "oba_user:$userId",
             dynamicPriceToken = null
         )
