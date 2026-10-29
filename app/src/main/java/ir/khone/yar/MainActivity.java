@@ -44,6 +44,8 @@ import java.io.OutputStream;
 import java.io.InputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.URL;
+import java.net.HttpURLConnection;
 import org.json.JSONObject;
 import org.json.JSONException;
 
