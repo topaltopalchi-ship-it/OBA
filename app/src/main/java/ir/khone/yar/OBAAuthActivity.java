@@ -35,7 +35,11 @@ public class OBAAuthActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        showWelcome();
+        if (getIntent().getBooleanExtra("open_account_form", false)) {
+            showAccountForm(!getIntent().getBooleanExtra("open_login", false));
+        } else {
+            showWelcome();
+        }
     }
 
     private void showWelcome() {
