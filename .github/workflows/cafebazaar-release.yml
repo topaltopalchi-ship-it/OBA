@@ -2,6 +2,13 @@ name: Build OBA CafeBazaar AAB and BIN
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '*.gradle'
+      - 'settings.gradle'
+      - '.github/workflows/cafebazaar-release.yml'
 
 permissions:
   contents: read
@@ -52,9 +59,10 @@ jobs:
           OBA_KEY_ALIAS: ${{ secrets.OBA_KEY_ALIAS }}
           OBA_KEY_PASSWORD: ${{ secrets.OBA_KEY_PASSWORD }}
         run: |
-          gradle --no-daemon testReleaseUnitTest bundleRelease
+          gradle --no-daemon testReleaseUnitTest bundleRelease assembleRelease
           mkdir -p output
           cp app/build/outputs/bundle/release/app-release.aab output/OBA.aab
+          cp app/build/outputs/apk/release/app-release.apk output/OBA-release.apk
 
       - name: Download BundleSigner
         run: |
@@ -86,6 +94,7 @@ jobs:
         with:
           name: OBA-CafeBazaar-AAB-BIN
           path: |
+            output/OBA-release.apk
             output/OBA.aab
             output/OBA.bin
           if-no-files-found: error
